@@ -29,7 +29,7 @@ public class MealServlet extends HttpServlet {
         log.debug("forward to meals");
 
 
-        List<MealWithExceed> mealsWithExceeded = MealsUtil.getWithExceeded( 2000);
+        List<MealWithExceed> mealsWithExceeded = MealsUtil.getFilteredWithExceeded(LocalTime.MIN, LocalTime.MAX, 2000);
         req.setAttribute("meals", mealsWithExceeded);
         req.setAttribute("DateTimeFormat", TimeUtil.dateTimeFormatter);
         req.getRequestDispatcher("/meals.jsp").forward(req, resp);
