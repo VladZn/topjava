@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import ru.javawebinar.topjava.model.Meal;
 import ru.javawebinar.topjava.model.MealWithExceed;
 import ru.javawebinar.topjava.util.MealsUtil;
+import ru.javawebinar.topjava.util.TimeUtil;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -27,17 +28,10 @@ public class MealServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         log.debug("forward to meals");
 
-        List<Meal> meals = Arrays.asList(
-                new Meal(LocalDateTime.of(2015, Month.MAY, 30, 10, 0), "Завтрак", 500),
-                new Meal(LocalDateTime.of(2015, Month.MAY, 30, 13, 0), "Обед", 1000),
-                new Meal(LocalDateTime.of(2015, Month.MAY, 30, 20, 0), "Ужин", 500),
-                new Meal(LocalDateTime.of(2015, Month.MAY, 31, 10, 0), "Завтрак", 1000),
-                new Meal(LocalDateTime.of(2015, Month.MAY, 31, 13, 0), "Обед", 500),
-                new Meal(LocalDateTime.of(2015, Month.MAY, 31, 20, 0), "Ужин", 510)
-        );
-        List<MealWithExceed> mealsWithExceeded = MealsUtil.getWithExceeded(meals, LocalTime.of(7, 0), LocalTime.of(12, 0), 2000);
+
+        List<MealWithExceed> mealsWithExceeded = MealsUtil.getWithExceeded( 2000);
         req.setAttribute("meals", mealsWithExceeded);
-        req.setAttribute("DateTimeFormat", DateTimeFormatter.ofPattern("dd/MM/YYYY HH:mm"));
+        req.setAttribute("DateTimeFormat", TimeUtil.dateTimeFormatter);
         req.getRequestDispatcher("/meals.jsp").forward(req, resp);
     }
 }
