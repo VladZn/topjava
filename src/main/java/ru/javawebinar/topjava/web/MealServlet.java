@@ -22,6 +22,8 @@ public class MealServlet extends HttpServlet {
 
     private MealRepository repository;
 
+    private Integer userId = 1;
+
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
@@ -38,7 +40,7 @@ public class MealServlet extends HttpServlet {
                 request.getParameter("description"),
                 Integer.parseInt(request.getParameter("calories")),
                 //Integer.parseInt(request.getParameter("userId")));
-                1);
+                userId);
 
         log.info(meal.isNew() ? "Create {}" : "Update {}", meal);
         repository.save(meal);

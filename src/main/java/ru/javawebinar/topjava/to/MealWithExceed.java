@@ -13,12 +13,15 @@ public class MealWithExceed {
 
     private final boolean exceed;
 
-    public MealWithExceed(Integer id, LocalDateTime dateTime, String description, int calories, boolean exceed) {
+    private final Integer userId;
+
+    public MealWithExceed(Integer id, LocalDateTime dateTime, String description, int calories, boolean exceed, Integer userId) {
         this.id = id;
         this.dateTime = dateTime;
         this.description = description;
         this.calories = calories;
         this.exceed = exceed;
+        this.userId = userId;
     }
 
     public Integer getId() {
@@ -39,6 +42,10 @@ public class MealWithExceed {
 
     public boolean isExceed() {
         return exceed;
+    }
+
+    public Integer getUserId() {
+        return userId;
     }
 
     @Override

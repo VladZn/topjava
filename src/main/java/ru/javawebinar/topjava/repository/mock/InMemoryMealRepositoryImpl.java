@@ -3,6 +3,7 @@ package ru.javawebinar.topjava.repository.mock;
 import ru.javawebinar.topjava.model.Meal;
 import ru.javawebinar.topjava.repository.MealRepository;
 import ru.javawebinar.topjava.util.MealsUtil;
+import ru.javawebinar.topjava.web.SecurityUtil;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -32,19 +33,26 @@ public class InMemoryMealRepositoryImpl implements MealRepository {
 
     @Override
     public void delete(int id) {
-        repository.remove(id);
+        if (get(id).getUserId() == SecurityUtil.authUserId()) {
+            repository.remove(id);
+        }
     }
 
     @Override
     public Meal get(int id) {
-        return repository.get(id);
+        Meal result = repository.get(id);
+        if (result.getUserId() == SecurityUtil.authUserId()) {
+            return result;
+        }
+        return null;
     }
 
     @Override
     public Collection<Meal> getAll() {
         return repository.values().stream()
-                                .sorted(Comparator.comparing(Meal::getDateTime).reversed())
-                                .collect(Collectors.toList());
+                .filter(user -> user.getUserId() == SecurityUtil.authUserId())
+                .sorted(Comparator.comparing(Meal::getDateTime).reversed())
+                .collect(Collectors.toList());
     }
 }
 
