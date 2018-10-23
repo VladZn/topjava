@@ -6,6 +6,7 @@ import ru.javawebinar.topjava.repository.MealRepository;
 import ru.javawebinar.topjava.util.MealsUtil;
 import ru.javawebinar.topjava.web.SecurityUtil;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Map;
@@ -53,10 +54,15 @@ public class InMemoryMealRepositoryImpl implements MealRepository {
 
     @Override
     public Collection<Meal> getAll() {
+        return getFiltered(LocalDateTime.MIN, LocalDateTime.MAX);
+    }
+
+    public Collection<Meal> getFiltered(LocalDateTime start, LocalDateTime end){
         return repository.values().stream()
                 .filter(user -> user.getUserId() == SecurityUtil.authUserId())
                 .sorted(Comparator.comparing(Meal::getDateTime).reversed())
                 .collect(Collectors.toList());
+
     }
 }
 
