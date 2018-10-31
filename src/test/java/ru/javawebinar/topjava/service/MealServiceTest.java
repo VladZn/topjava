@@ -43,13 +43,14 @@ import static ru.javawebinar.topjava.UserTestData.USER_ID;
 public class MealServiceTest {
 
     private static Map<String, Long> testsSummary = new HashMap<>();
-    private static Long start;
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
 
     @Rule
     public final TestWatcher testWatcher = new TestWatcher() {
+        private Long start;
+
         @Override
         protected void starting(Description description) {
             start = System.currentTimeMillis();
