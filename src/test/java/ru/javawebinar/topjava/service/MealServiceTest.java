@@ -1,7 +1,19 @@
 package ru.javawebinar.topjava.service;
 
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.PatternLayout;
+import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.ConsoleAppender;
+import org.junit.AfterClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
@@ -14,7 +26,8 @@ import ru.javawebinar.topjava.util.exception.NotFoundException;
 
 import java.time.LocalDate;
 import java.time.Month;
-import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import static ru.javawebinar.topjava.MealTestData.*;
 import static ru.javawebinar.topjava.UserTestData.ADMIN_ID;
@@ -29,8 +42,49 @@ import static ru.javawebinar.topjava.UserTestData.USER_ID;
 @Transactional
 public class MealServiceTest {
 
+    private static Map<String, Long> testsSummary = new HashMap<>();
+    private static Long start;
+
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
+
+    @Rule
+    public final TestWatcher testWatcher = new TestWatcher() {
+        @Override
+        protected void starting(Description description) {
+            start = System.currentTimeMillis();
+        }
+
+        @Override
+        protected void finished(Description description) {
+            testsSummary.put(description.getMethodName(), System.currentTimeMillis() - start);
+        }
+    };
+
     static {
         SLF4JBridgeHandler.install();
+    }
+
+    @AfterClass
+    public static void after() {
+        Logger rootLogger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+        LoggerContext loggerContext = ((ch.qos.logback.classic.Logger) rootLogger).getLoggerContext();
+        loggerContext.reset();
+
+        PatternLayoutEncoder encoder = new PatternLayoutEncoder();
+        encoder.setContext(loggerContext);
+        encoder.setPattern("%-5level [%thread]: %message%n");
+        encoder.start();
+
+        ConsoleAppender<ILoggingEvent> appender = new ConsoleAppender<>();
+        appender.setContext(loggerContext);
+        appender.setEncoder(encoder);
+        appender.start();
+
+        ((ch.qos.logback.classic.Logger) rootLogger).addAppender(appender);
+
+        rootLogger.info("TESTS SUMMARY:");
+        testsSummary.forEach((k, v) -> rootLogger.info(k + ": " + v + " ms"));
     }
 
     @Autowired
@@ -42,8 +96,9 @@ public class MealServiceTest {
         assertMatch(service.getAll(USER_ID), MEAL6, MEAL5, MEAL4, MEAL3, MEAL2);
     }
 
-    @Test(expected = NotFoundException.class)
+    @Test
     public void deleteNotFound() throws Exception {
+        expectedException.expect(NotFoundException.class);
         service.delete(MEAL1_ID, 1);
     }
 
@@ -60,8 +115,9 @@ public class MealServiceTest {
         assertMatch(actual, ADMIN_MEAL1);
     }
 
-    @Test(expected = NotFoundException.class)
+    @Test
     public void getNotFound() throws Exception {
+        expectedException.expect(NotFoundException.class);
         service.get(MEAL1_ID, ADMIN_ID);
     }
 
@@ -72,8 +128,9 @@ public class MealServiceTest {
         assertMatch(service.get(MEAL1_ID, USER_ID), updated);
     }
 
-    @Test(expected = NotFoundException.class)
+    @Test//(expected = NotFoundException.class)
     public void updateNotFound() throws Exception {
+        expectedException.expect(NotFoundException.class);
         service.update(MEAL1, ADMIN_ID);
     }
 
