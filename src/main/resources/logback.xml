@@ -21,6 +21,8 @@
     </appender>
 
     <logger name="ru.javawebinar.topjava" level="debug"/>
+    <logger name="org.hibernate.SQL" level="DEBUG" />
+    <logger name="org.hibernate.type" level="TRACE" />
 
     <root level="info">
         <appender-ref ref="file"/>

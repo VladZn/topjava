@@ -8,6 +8,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlConfig;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.transaction.annotation.Transactional;
 import ru.javawebinar.topjava.model.Meal;
 import ru.javawebinar.topjava.util.exception.NotFoundException;
 
@@ -25,6 +26,7 @@ import static ru.javawebinar.topjava.UserTestData.USER_ID;
 })
 @RunWith(SpringJUnit4ClassRunner.class)
 @Sql(scripts = "classpath:db/populateDB.sql", config = @SqlConfig(encoding = "UTF-8"))
+@Transactional
 public class MealServiceTest {
 
     static {
@@ -77,7 +79,6 @@ public class MealServiceTest {
 
     @Test
     public void getAll() throws Exception {
-//        service.getAll(USER_ID).forEach(System.out::println);
         assertMatch(service.getAll(USER_ID), MEALS);
     }
 
