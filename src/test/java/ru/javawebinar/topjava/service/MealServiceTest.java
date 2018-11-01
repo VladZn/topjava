@@ -6,9 +6,11 @@ import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.ConsoleAppender;
 import org.junit.AfterClass;
+import org.junit.AssumptionViolatedException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.rules.Stopwatch;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.junit.runner.RunWith;
@@ -21,6 +23,7 @@ import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlConfig;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
+import ru.javawebinar.topjava.UserTestData;
 import ru.javawebinar.topjava.model.Meal;
 import ru.javawebinar.topjava.util.exception.NotFoundException;
 
@@ -28,6 +31,7 @@ import java.time.LocalDate;
 import java.time.Month;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static ru.javawebinar.topjava.MealTestData.*;
 import static ru.javawebinar.topjava.UserTestData.ADMIN_ID;
@@ -42,24 +46,35 @@ import static ru.javawebinar.topjava.UserTestData.USER_ID;
 @Transactional
 public class MealServiceTest {
 
+    private static final Logger logger = LoggerFactory.getLogger(MealServiceTest.class);
+
     private static Map<String, Long> testsSummary = new HashMap<>();
+
+    private static void logInfo(long nanos, Description description, String status){
+        testsSummary.put(description.getMethodName(), TimeUnit.NANOSECONDS.toMillis(nanos));
+        logger.info(String.format("Test %s %s, spent %d ms", description.getMethodName(), status, TimeUnit.NANOSECONDS.toMillis(nanos)));
+    }
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
 
     @Rule
-    public final TestWatcher testWatcher = new TestWatcher() {
-        private Long start;
-
+    public final Stopwatch stopwatch = new Stopwatch() {
         @Override
-        protected void starting(Description description) {
-            start = System.currentTimeMillis();
+        protected void succeeded(long nanos, Description description) {
+            logInfo(nanos, description, "succeeded");
         }
 
         @Override
-        protected void finished(Description description) {
-            testsSummary.put(description.getMethodName(), System.currentTimeMillis() - start);
+        protected void failed(long nanos, Throwable e, Description description) {
+            logInfo(nanos, description, "failed");
         }
+
+        @Override
+        protected void skipped(long nanos, AssumptionViolatedException e, Description description) {
+            logInfo(nanos, description, "skipped");
+        }
+
     };
 
     static {
@@ -68,24 +83,24 @@ public class MealServiceTest {
 
     @AfterClass
     public static void after() {
-        Logger rootLogger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
-        LoggerContext loggerContext = ((ch.qos.logback.classic.Logger) rootLogger).getLoggerContext();
-        loggerContext.reset();
-
-        PatternLayoutEncoder encoder = new PatternLayoutEncoder();
-        encoder.setContext(loggerContext);
-        encoder.setPattern("%-5level [%thread]: %message%n");
-        encoder.start();
-
-        ConsoleAppender<ILoggingEvent> appender = new ConsoleAppender<>();
-        appender.setContext(loggerContext);
-        appender.setEncoder(encoder);
-        appender.start();
-
-        ((ch.qos.logback.classic.Logger) rootLogger).addAppender(appender);
-
-        rootLogger.info("TESTS SUMMARY:");
-        testsSummary.forEach((k, v) -> rootLogger.info(k + ": " + v + " ms"));
+//        Logger rootLogger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+//        LoggerContext loggerContext = ((ch.qos.logback.classic.Logger) rootLogger).getLoggerContext();
+//        loggerContext.reset();
+//
+//        PatternLayoutEncoder encoder = new PatternLayoutEncoder();
+//        encoder.setContext(loggerContext);
+//        encoder.setPattern("%-5level [%thread]: %message%n");
+//        encoder.start();
+//
+//        ConsoleAppender<ILoggingEvent> appender = new ConsoleAppender<>();
+//        appender.setContext(loggerContext);
+//        appender.setEncoder(encoder);
+//        appender.start();
+//
+//        ((ch.qos.logback.classic.Logger) rootLogger).addAppender(appender);
+//
+        logger.info("TESTS SUMMARY:");
+        testsSummary.forEach((k, v) -> logger.info(k + ": " + v + " ms"));
     }
 
     @Autowired
@@ -125,6 +140,7 @@ public class MealServiceTest {
     @Test
     public void update() throws Exception {
         Meal updated = getUpdated();
+        updated.setUser(UserTestData.USER);
         service.update(updated, USER_ID);
         assertMatch(service.get(MEAL1_ID, USER_ID), updated);
     }
